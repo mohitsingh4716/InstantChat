@@ -22,6 +22,10 @@ type Props = {
 const Request = ({id, imageUrl, username, email}: Props) => {
     const {mutate:denyRequest, pending:denyPending}
     = useMutationState(api.request.deny);
+
+    const {mutate:acceptRequest, pending:acceptPending}
+    = useMutationState(api.request.accept);
+
   return (
     <Card className='w-full flex items-center justify-between p-2 gap-2'>
         <div className='flex items-center gap-4 truncate'>
@@ -39,7 +43,13 @@ const Request = ({id, imageUrl, username, email}: Props) => {
             </div>
         </div>
         <div className='flex items-center gap-2'>
-            <Button size="icon" disabled={denyPending}  onClick={()=>{}}>
+            <Button size="icon" disabled={denyPending || acceptPending}  onClick={()=>{ acceptRequest({id})
+                 .then(()=>{
+                    toast.success('Friend request accepted');
+                }).catch((error)=>{
+                    toast.error(error instanceof ConvexError ? error.data : 'Unaspected error occurred');
+                })
+            }}>
                 <Check/>
             </Button>
             <Button size="icon" variant="destructive" onClick={()=>{
