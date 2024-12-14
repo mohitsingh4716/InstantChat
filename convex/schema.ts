@@ -42,6 +42,6 @@ export default defineSchema({
         conversationId: v.id("conversations"),
         type: v.string(),
         content: v.array(v.string()),
-    }).index("by_conversationsId",["conversationId"])
+    }).index("by_conversationId",["conversationId"])
         
 });
