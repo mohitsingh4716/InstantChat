@@ -28,7 +28,7 @@ const chatMessageSchema = z.object({
 });
 
 const ChatInput = () => {
-  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
+  // const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
   const { conversationId } = useConversation();
 

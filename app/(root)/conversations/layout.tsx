@@ -2,11 +2,13 @@
 import ItemList from "@/components/shared/item-list/ItemList";
 import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Loader, Loader2 } from "lucide-react";
 import React from "react";
 import DMConversationItem from "./_components/DMConversationItem";
+import { Loader2 } from "lucide-react";
 
-type Props = React.PropsWithChildren<{}>;
+type Props = React.PropsWithChildren<{
+  children: React.ReactNode;
+}>;
 
 const ConversationsLayout = ({ children }: Props) => {
   const conversations = useQuery(api.conversations.get);
@@ -31,6 +33,7 @@ const ConversationsLayout = ({ children }: Props) => {
                   username={conversations.otherMember?.username || ""}
                   lastMessageContent={conversations.lastMessage?.content}
                   lastMessageSender={conversations.lastMessage?.sender}
+                  unseenCount={conversations.unseenCount}
                 />
               );
             })

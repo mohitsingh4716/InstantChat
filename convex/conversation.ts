@@ -2,110 +2,135 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getUserByClerkId } from "./_utils";
 
+export const get = query({
+  args: {
+    id: v.id("conversations"),
+  },
 
-export const get= query({
-    args:{
-        id:v.id("conversations"),
-    },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
 
-  handler: async(ctx,args)=>{
-        const identity= await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError(
+        "You must be logged in to get requests/Unauthorized"
+      );
+    }
 
-        if(!identity){
-        throw new ConvexError("You must be logged in to get requests/Unauthorized");
-        }
+    const currentUser = await getUserByClerkId({
+      ctx,
+      clerkId: identity.subject,
+    });
 
-        const currentUser= await getUserByClerkId({
-            ctx, clerkId:identity.subject
-        });
+    if (!currentUser) {
+      throw new ConvexError("User not found");
+    }
 
-        if(!currentUser){
-            throw new ConvexError("User not found");
-        }
+    const conversation = await ctx.db.get(args.id);
 
-        const conversation = await ctx.db.get(args.id);
+    if (!conversation) {
+      throw new ConvexError("Conversation not found");
+    }
 
-        if(!conversation){
-            throw new ConvexError("Conversation not found");
-        }
+    const membership = await ctx.db
+      .query("conversationMembers")
+      .withIndex("by_memberId_conversationId", (q) =>
+        q.eq("memberId", currentUser._id).eq("conversationId", conversation._id)
+      )
+      .unique();
 
-        const membership= await ctx.db.query("conversationMembers")
-          .withIndex("by_memberId_conversationId", q =>q.eq("memberId", currentUser._id).eq("conversationId", conversation._id)).unique();
+    if (!membership) {
+      throw new ConvexError("You are not a member of this conversation");
+    }
 
-         if(!membership){
-            throw new ConvexError("You are not a member of this conversation");
-         }
+    const allConversationMemberships = await ctx.db
+      .query("conversationMembers")
+      .withIndex("by_conversationId", (q) => q.eq("conversationId", args.id))
+      .collect();
 
-        const allConversationMemberships= await ctx.db
-                .query("conversationMembers") 
-                .withIndex("by_conversationId",
-                (q)=>q.eq("conversationId",args.id)).collect();
-      
-       
-        if(!conversation.isGroup){
-            const otherMemberships = 
-            allConversationMemberships.filter(membership => membership.memberId !== currentUser._id)[0];
+    if (!conversation.isGroup) {
+      const otherMemberships = allConversationMemberships.filter(
+        (membership) => membership.memberId !== currentUser._id
+      )[0];
 
-            const otherMemberDetails = await ctx.db.get(otherMemberships.memberId);
+      const otherMemberDetails = await ctx.db.get(otherMemberships.memberId);
+
+      return {
+        ...conversation,
+        otherMember: {
+          ...otherMemberDetails,
+          lastSeenMessageId: otherMemberships.lastSeenMessage,
+        },
+        // need to fixed for group chat
+        otherMembers: null,
+      };
+    } else {
+      const otherMembers = await Promise.all(
+        allConversationMemberships
+          .filter((membership) => membership.memberId !== currentUser._id)
+          .map(async (membership) => {
+            const member = await ctx.db.get(membership.memberId);
+
+            if (!member) {
+              throw new ConvexError("Member could not found");
+            }
 
             return {
-                ...conversation,
-                otherMember: {
-                    ...otherMemberDetails,
-                    lastSeenMessageId: otherMemberships.lastSeenMessage
-                
-                },
-                // need to fixed for group chat
-                otherMembers : null
+              _id: member._id,
+              username: member.username,
+            };
+          })
+      );
 
-            }
-        }
-         
-    },
-
+    //   return {
+    //     ...conversation,
+    //     otherMember: null,
+    //     otherMembers,
+    //   };
+    }
+  },
 });
 
+export const markRead = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    messageId: v.id("messages"),
+  },
 
-export const markRead= mutation({
-    args:{
-        conversationId:v.id("conversations"),
-        messageId:v.id("messages"),
-    },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
 
-  handler: async(ctx,args)=>{
-        const identity= await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new ConvexError(
+        "You must be logged in to get requests/Unauthorized"
+      );
+    }
 
-        if(!identity){
-        throw new ConvexError("You must be logged in to get requests/Unauthorized");
-        }
+    const currentUser = await getUserByClerkId({
+      ctx,
+      clerkId: identity.subject,
+    });
 
-        const currentUser= await getUserByClerkId({
-            ctx, clerkId:identity.subject
-        });
+    if (!currentUser) {
+      throw new ConvexError("User not found");
+    }
 
-        if(!currentUser){
-            throw new ConvexError("User not found");
-        }
+    const membership = await ctx.db
+      .query("conversationMembers")
+      .withIndex("by_memberId_conversationId", (q) =>
+        q
+          .eq("memberId", currentUser._id)
+          .eq("conversationId", args.conversationId)
+      )
+      .unique();
 
-        
+    if (!membership) {
+      throw new ConvexError("You are not a member of this conversation");
+    }
 
-        const membership= await ctx.db.query("conversationMembers")
-          .withIndex("by_memberId_conversationId", q =>q.eq("memberId", currentUser._id).eq("conversationId",args.conversationId)).unique();
+    const lastMessage = await ctx.db.get(args.messageId);
 
-         if(!membership){
-            throw new ConvexError("You are not a member of this conversation");
-         }
-
-       const lastMessage= await ctx.db.get(args.messageId);
-
-       await ctx.db.patch(membership._id,{
-              lastSeenMessage :lastMessage ?
-              lastMessage._id: undefined,
-       });
-      
-       
-        
-         
-    },
-
+    await ctx.db.patch(membership._id, {
+      lastSeenMessage: lastMessage ? lastMessage._id : undefined,
+    });
+  },
 });

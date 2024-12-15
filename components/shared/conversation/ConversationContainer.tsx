@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card'
 import React from 'react'
 
 type Props = React.PropsWithChildren<{
-
+  children: React.ReactNode;
 }>
 
 const ConversationContainer = ({children}:Props) => {

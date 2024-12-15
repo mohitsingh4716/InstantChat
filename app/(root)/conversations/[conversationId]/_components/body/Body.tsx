@@ -38,7 +38,8 @@ const Body = ({members}: Props) => {
       switch(names.length){
         case 1 :
           return <p className="text-muted-foreground text-sm text-right">
-            {`Seen by ${names[0]}`}
+            {/* {`Seen by ${names[0]}`} */}
+            {`Seen`}
           </p>
         
         case 2 :
