@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import React from "react";
 
 type Props = {
