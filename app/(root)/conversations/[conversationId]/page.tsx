@@ -24,9 +24,9 @@ const ConversationsPages = ({ params }: Props) => {
 
   const [removeFriendDialogOpen, setRemoveFriendDialogOpen] = useState(false);
 
-  const [deleteGroupDialogOpen, setDeleteGroupDialogOpen] = useState(false);
+  // const [deleteGroupDialogOpen, setDeleteGroupDialogOpen] = useState(false);
 
-  const [leaveGroupDialogOpen, setLeaveGroupDialogOpen] = useState(false);
+  // const [leaveGroupDialogOpen, setLeaveGroupDialogOpen] = useState(false);
 
   // const [callType, setCallType] = useState<"audio" | "video" | null>(null);
 
@@ -59,16 +59,16 @@ const ConversationsPages = ({ params }: Props) => {
         options={
           conversation.isGroup
             ? [
-                {
-                  label: "Delete Group",
-                  destructive: true,
-                  onClick: () => setDeleteGroupDialogOpen(true),
-                },
-                {
-                  label: "Leave Group",
-                  destructive: false,
-                  onClick: () => setLeaveGroupDialogOpen(true),
-                },
+                // {
+                //   label: "Delete Group",
+                //   destructive: true,
+                //   onClick: () => setDeleteGroupDialogOpen(true),
+                // },
+                // {
+                //   label: "Leave Group",
+                //   destructive: false,
+                //   onClick: () => setLeaveGroupDialogOpen(true),
+                // },
               ]
             : [
                 {

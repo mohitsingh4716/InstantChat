@@ -43,13 +43,18 @@ const ChatInput = () => {
     },
   });
 
-  const handleInputChange = (event: any) => {
-    const { value, selectionStart } = event.target;
-
-    if (selectionStart !== null) {
-      form.setValue("content", value);
+  const handleInputChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement> | React.MouseEvent<HTMLTextAreaElement>
+  ) => {
+    if ("value" in event.target) {
+      const { value, selectionStart } = event.target;
+  
+      if (selectionStart !== null) {
+        form.setValue("content", value);
+      }
     }
   };
+  
 
   const handleSubmit = async (values: z.infer<typeof chatMessageSchema>) => {
     await createMessage({
